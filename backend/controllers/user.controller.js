@@ -148,60 +148,74 @@ export const editProfile = async (req, res) => {
         console.log(error);
     }
 };
-export const getSuggestedUsers = async (req, res) => {
-    try {
-        const suggestedUsers = await User.find({ _id: { $ne: req.id } }).select("-password");
-        if (!suggestedUsers) {
-            return res.status(400).json({
-                message: 'Currently do not have any users',
-            })
-        };
-        return res.status(200).json({
-            success: true,
-            users: suggestedUsers
-        })
-    } catch (error) {
-        console.log(error);
-    }
-};
 export const followOrUnfollow = async (req, res) => {
     try {
-        const followKrneWala = req.id; // patel
-        const jiskoFollowKrunga = req.params.id; // shivani
-        if (followKrneWala === jiskoFollowKrunga) {
+        const currentUserId = req.id; // Logged-in user
+        const targetUserId = req.params.id; // User to follow/unfollow
+
+        if (currentUserId === targetUserId) {
             return res.status(400).json({
                 message: 'You cannot follow/unfollow yourself',
-                success: false
+                success: false,
             });
         }
 
-        const user = await User.findById(followKrneWala);
-        const targetUser = await User.findById(jiskoFollowKrunga);
+        const currentUser = await User.findById(currentUserId);
+        const targetUser = await User.findById(targetUserId);
 
-        if (!user || !targetUser) {
-            return res.status(400).json({
+        if (!currentUser || !targetUser) {
+            return res.status(404).json({
                 message: 'User not found',
-                success: false
+                success: false,
             });
         }
-        // mai check krunga ki follow krna hai ya unfollow
-        const isFollowing = user.following.includes(jiskoFollowKrunga);
+
+        const isFollowing = currentUser.following.includes(targetUserId);
+
         if (isFollowing) {
-            // unfollow logic ayega
-            await Promise.all([
-                User.updateOne({ _id: followKrneWala }, { $pull: { following: jiskoFollowKrunga } }),
-                User.updateOne({ _id: jiskoFollowKrunga }, { $pull: { followers: followKrneWala } }),
-            ])
+            // Unfollow
+            currentUser.following.pull(targetUserId);
+            targetUser.followers.pull(currentUserId);
+            await Promise.all([currentUser.save(), targetUser.save()]);
             return res.status(200).json({ message: 'Unfollowed successfully', success: true });
         } else {
-            // follow logic ayega
-            await Promise.all([
-                User.updateOne({ _id: followKrneWala }, { $push: { following: jiskoFollowKrunga } }),
-                User.updateOne({ _id: jiskoFollowKrunga }, { $push: { followers: followKrneWala } }),
-            ])
-            return res.status(200).json({ message: 'followed successfully', success: true });
+            // Follow
+            currentUser.following.push(targetUserId);
+            targetUser.followers.push(currentUserId);
+            await Promise.all([currentUser.save(), targetUser.save()]);
+            return res.status(200).json({ message: 'Followed successfully', success: true });
         }
     } catch (error) {
-        console.log(error);
+        console.error(error);
+        return res.status(500).json({
+            message: 'Something went wrong',
+            success: false,
+        });
     }
-}
+};
+export const getSuggestedUsers = async (req, res) => {
+    try {
+        const currentUserId = req.id;
+        const currentUser = await User.findById(currentUserId);
+
+        const suggestedUsers = await User.find({ _id: { $ne: currentUserId } })
+            .select("-password")
+            .lean();
+
+        const updatedSuggestedUsers = suggestedUsers.map((user) => ({
+            ...user,
+            isFollowing: currentUser.following.includes(user._id),
+        }));
+
+        return res.status(200).json({
+            success: true,
+            users: updatedSuggestedUsers,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Failed to fetch suggested users",
+            success: false,
+        });
+    }
+};
