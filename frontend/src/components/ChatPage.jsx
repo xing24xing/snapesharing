@@ -18,7 +18,7 @@ const ChatPage = () => {
     const sendMessageHandler = async (receiverId) => {
         try {
             // Ensure using the correct protocol (http) for local development
-            const res = await axios.post(`http://localhost:8000/api/v1/message/send/${receiverId}`, 
+            const res = await axios.post(`https://snapesharing.onrender.com/api/v1/message/send/${receiverId}`, 
                 { textMessage }, 
                 { headers: { 'Content-Type': 'application/json' }, withCredentials: true }
             );
