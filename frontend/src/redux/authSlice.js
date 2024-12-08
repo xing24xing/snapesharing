@@ -16,12 +16,12 @@ const authSlice = createSlice({
         setSuggestedUsers:(state,action) => {
             state.suggestedUsers = action.payload;
         },
-        setUserProfile: (state, action) => {
+        setUserProfile:(state,action) => {
             state.userProfile = action.payload;
         },
-        setSuggestedUsers: (state, action) => {
-            state.suggestedUsers = action.payload;
-        },
+        setSelectedUser:(state,action) => {
+            state.selectedUser = action.payload;
+        }
     }
 });
 export const {
