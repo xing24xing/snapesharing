@@ -15,7 +15,7 @@ const useGetSuggestedUsers = () => {
                 }
             } catch (error) {
                 console.log(error);
-            }z
+            }
         }
         fetchSuggestedUsers();
     }, []);

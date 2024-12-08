@@ -10,7 +10,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { setPosts, setSelectedPost } from '@/redux/postSlice';
 import { Badge } from './ui/badge';
-// import { Link } from 'react-router-dom';
+
 const Post = ({ post }) => {
     const [text, setText] = useState("");
     const [open, setOpen] = useState(false);
@@ -62,7 +62,7 @@ const Post = ({ post }) => {
                 withCredentials: true
             });
             if (res.data.success) {
-                const updatedCommentData = [...comment, res.data.comment];
+                const updatedCommentData = [res.data.comment, ...comment];  // Add new comment at the beginning
                 setComment(updatedCommentData);
 
                 const updatedPostData = posts.map(p =>
